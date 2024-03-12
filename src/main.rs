@@ -1,9 +1,11 @@
+use chrono::{DateTime, Local};
+use indicatif::ProgressBar;
+use indicatif::ProgressStyle;
 use notify_rust::Notification;
+use notify_rust::Timeout;
 use std::thread;
 use std::time::Duration;
-use notify_rust::Timeout;
 use winapi::um::winuser::MessageBeep;
-use chrono::{Local, DateTime};
 
 fn main() {
     // Get the number of minutes to wait from command line arguments
@@ -24,8 +26,19 @@ fn main() {
 
     // Wait for the specified number of seconds
     println!("Waiting for {} minutes...", minutes);
-    thread::sleep(Duration::from_secs(minutes * 60));
-    
+    let bar = ProgressBar::new(minutes * 60);
+    bar.set_style(
+        ProgressStyle::with_template(
+            "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} remaining: {eta}",
+        )
+        .unwrap()
+        .progress_chars("##-"),
+    );
+    for _ in 0..(minutes * 60) {
+        thread::sleep(Duration::from_secs(1));
+        bar.inc(1)
+    }
+
     // Get the current time in your local timezone
     let local_time: DateTime<Local> = Local::now();
     // Format the time as a string
@@ -34,10 +47,15 @@ fn main() {
     // Display the notification
     let _ = Notification::new()
         .summary("Notification")
-        .body(&format!("{}: Time's up! Notification after {} minutes.", time_string, minutes))
+        .body(&format!(
+            "{}: Time's up! Notification after {} minutes.",
+            time_string, minutes
+        ))
         .timeout(Timeout::Never) // this however is
         .show();
 
     // Play a sound
-    unsafe { MessageBeep(0xFFFFFFFF); } // Plays the default system beep sound
+    unsafe {
+        MessageBeep(0xFFFFFFFF);
+    } // Plays the default system beep sound
 }
