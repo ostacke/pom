@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 notify-rust = "4.10.0"
+winapi = { version = "0.3", features = ["winuser"] }
+chrono = "0.4"
